@@ -1,7 +1,9 @@
 {
   "name": "adventofcode-2022",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "create": "./create.sh"
+  },
   "devDependencies": {
     "bun-types": "^0.2.2"
   }
