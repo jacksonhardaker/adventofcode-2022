@@ -1,6 +1,6 @@
 import { readInput } from 'utils/readInput';
 
-const input = readInput(import.meta.dir);
+const rawInput = readInput(import.meta.dir);
 
 export const part1 = (input: string) => {
   const elves = input
@@ -22,5 +22,5 @@ export const part2 = (input: string) => {
     .reduce((sum, num) => sum + num);
 };
 
-console.log(`Part 1: ${part1(input)}`);
-console.log(`Part 2: ${part2(input)}`);
+// console.log(`Part 1: ${part1(rawInput)}`);
+// console.log(`Part 2: ${part2(rawInput)}`);
