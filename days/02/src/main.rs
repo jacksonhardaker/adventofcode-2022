@@ -81,6 +81,7 @@ fn main() {
         .collect();
 
     // Part 1: 14827
+    // TODO: Why does Rust complain about split_data.iter().sum() ?
     let s = split_data.iter().fold(0u64, |sum, i| sum + (*i as u64));
     println!("Part 1: {}", s);
 
