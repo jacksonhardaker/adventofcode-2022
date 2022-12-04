@@ -44,10 +44,10 @@ fn main() {
                 let start = split_range.next().unwrap().parse::<i32>().unwrap();
                 let end = split_range.next().unwrap().parse::<i32>().unwrap();
 
-                return start..=end;
+                start..=end
             });
 
-            return (ranges.next().unwrap(), ranges.next().unwrap());
+            (ranges.next().unwrap(), ranges.next().unwrap())
         })
         .collect();
 
