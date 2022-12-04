@@ -4,8 +4,8 @@ use std::ops::RangeInclusive;
 fn part1(input: Vec<(RangeInclusive<i32>, RangeInclusive<i32>)>) {
     let mut contained_count = 0;
     input.iter().for_each(|pair| {
-        if pair.0.start() <= pair.1.start() && pair.0.end() >= pair.1.end()
-            || pair.1.start() <= pair.0.start() && pair.1.end() >= pair.0.end()
+        if (pair.0.contains(pair.1.start()) && pair.0.contains(pair.1.end()))
+            || (pair.1.contains(pair.0.start()) && pair.1.contains(pair.0.end()))
         {
             // One of the ranges _fully_ includes the other
             contained_count += 1;
@@ -18,10 +18,10 @@ fn part1(input: Vec<(RangeInclusive<i32>, RangeInclusive<i32>)>) {
 fn part2(input: Vec<(RangeInclusive<i32>, RangeInclusive<i32>)>) {
     let mut contained_count = 0;
     input.iter().for_each(|pair| {
-        if (pair.0.start() <= pair.1.start() && pair.0.end() >= pair.1.start())
-            || (pair.0.start() <= pair.1.end() && pair.0.end() >= pair.1.end())
-            || (pair.1.start() <= pair.0.start() && pair.1.end() >= pair.0.start())
-            || (pair.1.start() <= pair.0.end() && pair.1.end() >= pair.0.end())
+        if (pair.0.contains(pair.1.start()))
+            || (pair.0.contains(pair.1.end()))
+            || (pair.1.contains(pair.0.start()))
+            || (pair.1.contains(pair.0.end()))
         {
             // One of the ranges _partially_ includes the other
             contained_count += 1;
