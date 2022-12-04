@@ -1,7 +1,9 @@
 use std::fs;
 use std::ops::RangeInclusive;
 
-fn part1(input: Vec<(RangeInclusive<i32>, RangeInclusive<i32>)>) {
+type Input = Vec<(RangeInclusive<i32>, RangeInclusive<i32>)>;
+
+fn part1(input: Input) {
     let mut contained_count = 0;
     input.iter().for_each(|pair| {
         if (pair.0.contains(pair.1.start()) && pair.0.contains(pair.1.end()))
@@ -15,7 +17,7 @@ fn part1(input: Vec<(RangeInclusive<i32>, RangeInclusive<i32>)>) {
     println!("Part 1: {}", contained_count);
 }
 
-fn part2(input: Vec<(RangeInclusive<i32>, RangeInclusive<i32>)>) {
+fn part2(input: Input) {
     let mut contained_count = 0;
     input.iter().for_each(|pair| {
         if (pair.0.contains(pair.1.start()))
@@ -35,7 +37,7 @@ fn main() {
     let input = fs::read_to_string("./days/04/input.txt").expect("Error!");
 
     // Parse input
-    let parsed_input: Vec<(RangeInclusive<i32>, RangeInclusive<i32>)> = input
+    let parsed_input: Input = input
         .trim()
         .split("\n")
         .map(|line| {
