@@ -5,7 +5,7 @@ use std::fs;
 fn _part1() {}
 
 fn main() {
-    let input = fs::read_to_string("./days/05/test-input.txt").expect("Error!");
+    let input = fs::read_to_string("./days/05/input.txt").expect("Error!");
     let mut parts = input.split("\n\n");
 
     // Split into stacks and instructions
@@ -32,14 +32,18 @@ fn main() {
     for cap in item_re.captures_iter(initial_stacks) {
         // Stack index to push into
         let stack_pos = ((cap.get(0).unwrap().start() % (num_of_stacks * 4) as usize) as f64
-            / num_of_stacks as f64)
+            / 4 as f64)
             .floor() as usize;
 
         // Value to push
         let val = (&cap[1]).to_owned();
 
+        // println!("{} {}", num_of_stacks * 4, val);
+
         stacks[stack_pos].push_front(val);
     }
+
+    println!("{:#?}", stacks);
 
     let instr_re = Regex::new(r"\d+").unwrap();
     instructions.trim().split("\n").for_each(|instruction| {
@@ -54,6 +58,7 @@ fn main() {
 
         for _ in 0..move_count {
             let moved_val = stacks[move_from - 1].pop_back();
+            // println!()
             stacks[move_to - 1].push_back(moved_val.unwrap());
         }
     });
