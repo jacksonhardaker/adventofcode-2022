@@ -2,7 +2,39 @@ use regex::Regex;
 use std::collections::VecDeque;
 use std::fs;
 
-fn _part1() {}
+type Stacks = Vec<VecDeque<String>>;
+
+fn part1(stacks: Stacks, instructions: &str) {
+    // println!("{:#?}", stacks);
+
+    let mut mut_stacks = stacks.clone();
+
+    let instr_re = Regex::new(r"\d+").unwrap();
+    instructions.trim().split("\n").for_each(|instruction| {
+        let digits: Vec<_> = instr_re
+            .captures_iter(instruction)
+            .map(|digit| (&digit[0]).to_owned().parse::<i32>().unwrap())
+            .collect();
+
+        let move_count = digits[0] as usize;
+        let move_from = digits[1] as usize;
+        let move_to = digits[2] as usize;
+
+        for _ in 0..move_count {
+            let moved_val = mut_stacks[move_from - 1].pop_back();
+            // println!()
+            mut_stacks[move_to - 1].push_back(moved_val.unwrap());
+        }
+    });
+
+    let mut result: String = "".to_owned();
+
+    for i in 0..mut_stacks.len() {
+        result.push_str(&mut_stacks[i as usize].pop_back().unwrap());
+    }
+
+    println!("Part 1: {}", result);
+}
 
 fn main() {
     let input = fs::read_to_string("./days/05/input.txt").expect("Error!");
@@ -24,8 +56,7 @@ fn main() {
         .unwrap();
 
     // Init stacks
-    let mut stacks: Vec<VecDeque<String>> =
-        vec![VecDeque::new(); num_of_stacks.try_into().unwrap()];
+    let mut stacks: Stacks = vec![VecDeque::new(); num_of_stacks.try_into().unwrap()];
 
     // Populate stacks
     let item_re = Regex::new(r"\[([A-Z])\]").unwrap();
@@ -43,31 +74,5 @@ fn main() {
         stacks[stack_pos].push_front(val);
     }
 
-    println!("{:#?}", stacks);
-
-    let instr_re = Regex::new(r"\d+").unwrap();
-    instructions.trim().split("\n").for_each(|instruction| {
-        let digits: Vec<_> = instr_re
-            .captures_iter(instruction)
-            .map(|digit| (&digit[0]).to_owned().parse::<i32>().unwrap())
-            .collect();
-
-        let move_count = digits[0] as usize;
-        let move_from = digits[1] as usize;
-        let move_to = digits[2] as usize;
-
-        for _ in 0..move_count {
-            let moved_val = stacks[move_from - 1].pop_back();
-            // println!()
-            stacks[move_to - 1].push_back(moved_val.unwrap());
-        }
-    });
-
-    let mut result: String = "".to_owned();
-
-    for i in 0..num_of_stacks {
-        result.push_str(&stacks[i as usize].pop_back().unwrap());
-    }
-
-    println!("Part 1: {}", result);
+    part1(stacks.clone(), instructions);
 }
