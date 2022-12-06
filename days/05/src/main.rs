@@ -4,11 +4,11 @@ use std::fs;
 
 type Stacks = Vec<VecDeque<String>>;
 
-fn part1(stacks: Stacks, instructions: &str) {
-    // println!("{:#?}", stacks);
-
-    let mut mut_stacks = stacks.clone();
-
+fn execute_instructions(
+    stacks: &mut Stacks,
+    instructions: &str,
+    execute: fn(&mut Stacks, usize, usize, usize),
+) -> String {
     let instr_re = Regex::new(r"\d+").unwrap();
     instructions.trim().split("\n").for_each(|instruction| {
         let digits: Vec<_> = instr_re
@@ -20,20 +20,46 @@ fn part1(stacks: Stacks, instructions: &str) {
         let move_from = digits[1] as usize;
         let move_to = digits[2] as usize;
 
-        for _ in 0..move_count {
-            let moved_val = mut_stacks[move_from - 1].pop_back();
-            // println!()
-            mut_stacks[move_to - 1].push_back(moved_val.unwrap());
-        }
+        execute(stacks, move_count, move_from, move_to);
     });
 
+    // Get result
     let mut result: String = "".to_owned();
-
-    for i in 0..mut_stacks.len() {
-        result.push_str(&mut_stacks[i as usize].pop_back().unwrap());
+    for i in 0..stacks.len() {
+        result.push_str(&stacks[i as usize].pop_back().unwrap());
     }
+    return result;
+}
+
+fn part1(stacks: &mut Stacks, instructions: &str) {
+    let result = execute_instructions(
+        stacks,
+        instructions,
+        |inner_stacks, move_count, move_from, move_to| {
+            for _ in 0..move_count {
+                let moved_val = inner_stacks[move_from - 1].pop_back();
+
+                inner_stacks[move_to - 1].push_back(moved_val.unwrap());
+            }
+        },
+    );
 
     println!("Part 1: {}", result);
+}
+
+fn part2(stacks: &mut Stacks, instructions: &str) {
+    let result = execute_instructions(
+        stacks,
+        instructions,
+        |inner_stacks, move_count, move_from, move_to| {
+            let length = inner_stacks[move_from - 1].len();
+            let to_move = inner_stacks[move_from - 1].split_off(length - move_count);
+
+            inner_stacks[move_to - 1].extend(to_move);
+        },
+    );
+
+    println!("Part 2: {}", result);
 }
 
 fn main() {
@@ -69,10 +95,9 @@ fn main() {
         // Value to push
         let val = (&cap[1]).to_owned();
 
-        // println!("{} {}", num_of_stacks * 4, val);
-
         stacks[stack_pos].push_front(val);
     }
 
-    part1(stacks.clone(), instructions);
+    part1(&mut stacks.clone(), instructions.clone());
+    part2(&mut stacks.clone(), instructions.clone());
 }
