@@ -27,8 +27,7 @@ fn get_dirs(input: Split<&str>) -> HashMap<String, usize> {
             let left = parts.next().unwrap();
             let _right = parts.next().unwrap();
 
-            if left.eq("dir") {
-            } else {
+            if !left.eq("dir") {
                 // Size of current file
                 let size = left.parse::<usize>().unwrap();
 
