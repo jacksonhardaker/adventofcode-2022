@@ -1,6 +1,9 @@
 use regex::Regex;
 use std::{collections::HashMap, fs, str::Split};
 
+const MAXIMUM_DISK_SPACE: usize = 70000000;
+const REQUIRED_DISK_SPACE: usize = 30000000;
+
 fn get_dirs(input: Split<&str>) -> HashMap<String, usize> {
     let mut dirs: HashMap<String, usize> = HashMap::new();
     let mut current_path: Vec<String> = Vec::new();
@@ -58,13 +61,11 @@ fn part1(input: Split<&str>) -> usize {
 }
 
 fn part2(input: Split<&str>) -> usize {
-    let total_disk_space: usize = 70000000;
-    let required_space: usize = 30000000;
     let dirs = get_dirs(input);
-    let current_unused = total_disk_space - dirs.get("/").unwrap();
+    let current_unused = MAXIMUM_DISK_SPACE - dirs.get("/").unwrap();
 
     dirs.into_values()
-        .filter(|size| (current_unused + size) >= required_space)
+        .filter(|size| (current_unused + size) >= REQUIRED_DISK_SPACE)
         .min()
         .unwrap()
 }
