@@ -19,7 +19,7 @@ fn main() {
 fn test_part1() {
     let raw_input = fs::read_to_string("./test-input.txt").expect("Error!");
     let input = raw_input.trim().split("\n");
-    assert_eq!(part1(input), 21);
+    assert_eq!(part1(input), 0);
 }
 #[test]
 fn test_part2() {
