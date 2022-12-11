@@ -5,23 +5,25 @@ use std::fs;
 #[derive(Debug, Clone)]
 struct Monkey {
     _name: String,
-    items: VecDeque<i32>,
+    items: VecDeque<u128>,
     operation_modifier: String,
     operation_operator: String,
-    test_divisor: i32,
+    test_divisor: u128,
     truthy_monkey_index: usize,
     falsy_monkey_index: usize,
     inspect_count: usize,
+    relief_modifier: u128,
 }
 
 impl Monkey {
     fn new(
-        items: VecDeque<i32>,
+        items: VecDeque<u128>,
         op_args: (&str, &str),
-        test_divisor: i32,
+        test_divisor: u128,
         truthy_monkey_index: usize,
         falsy_monkey_index: usize,
         index: usize,
+        relief_modifier: u128,
     ) -> Monkey {
         Monkey {
             _name: format!("Monkey {}", index),
@@ -32,6 +34,7 @@ impl Monkey {
             truthy_monkey_index: truthy_monkey_index,
             falsy_monkey_index: falsy_monkey_index,
             inspect_count: 0,
+            relief_modifier: relief_modifier,
         }
     }
 
@@ -41,13 +44,13 @@ impl Monkey {
     //   Test: divisible by 23
     //     If true: throw to monkey 2
     //     If false: throw to monkey 3
-    fn from(index: usize, monkey_string: &str) -> Monkey {
-        let items: VecDeque<i32> = Regex::new(r"Starting items:(.*)")
+    fn from(index: usize, monkey_string: &str, relief_modifier: u128) -> Monkey {
+        let items: VecDeque<u128> = Regex::new(r"Starting items:(.*)")
             .unwrap()
-            .captures((monkey_string))
+            .captures(monkey_string)
             .unwrap()[1]
             .split(",")
-            .map(|part| part.trim().parse::<i32>().unwrap())
+            .map(|part| part.trim().parse::<u128>().unwrap())
             .collect();
 
         let op_cap = Regex::new(r"Operation: new = old (\*|\+) (old|\d+)")
@@ -55,11 +58,11 @@ impl Monkey {
             .captures(monkey_string)
             .unwrap();
 
-        let test_divisor: i32 = Regex::new(r"Test: divisible by (\d+)")
+        let test_divisor: u128 = Regex::new(r"Test: divisible by (\d+)")
             .unwrap()
             .captures(monkey_string)
             .unwrap()[1]
-            .parse::<i32>()
+            .parse::<u128>()
             .unwrap();
 
         let truthy_monkey_index: usize = Regex::new(r"If true: throw to monkey (\d+)")
@@ -82,6 +85,7 @@ impl Monkey {
             truthy_monkey_index,
             falsy_monkey_index,
             index,
+            relief_modifier,
         )
     }
 
@@ -89,11 +93,12 @@ impl Monkey {
         self.items.len() > 0
     }
 
-    fn inspect_first_item(&mut self) -> (i32, usize) {
+    fn inspect_first_item(&mut self, common_modulo: u128) -> (u128, usize) {
         if self.has_items() {
             self.inspect_count += 1;
             let mut item = self.items.pop_front().unwrap();
-            item = self.operation(item);
+            item = self.operation(item, common_modulo);
+
             if self.test(item) {
                 // throw truthy
                 (item, self.truthy_monkey_index)
@@ -106,48 +111,62 @@ impl Monkey {
         }
     }
 
-    fn catch_item(&mut self, item: i32) {
+    fn catch_item(&mut self, item: u128) {
         self.items.push_back(item);
     }
 
-    fn operation(&mut self, item: i32) -> i32 {
+    fn operation(&mut self, item: u128, common_modulo: u128) -> u128 {
         let mut val = item;
         let modifier = if self.operation_modifier == "old" {
             val
         } else {
-            self.operation_modifier.parse::<i32>().unwrap()
+            self.operation_modifier.parse::<u128>().unwrap()
         };
 
         if self.operation_operator == "+" {
-            val = (val + modifier) / 3
+            val = val + modifier
         } else if self.operation_operator == "*" {
-            val = (val * modifier) / 3
+            val = val * modifier
+        }
+
+        if self.relief_modifier > 1 {
+            val = val / self.relief_modifier
+        } else {
+            val = val % common_modulo
         }
 
         val
     }
 
-    fn test(&self, val: i32) -> bool {
+    fn test(&self, val: u128) -> bool {
         val % self.test_divisor == 0
     }
 }
 
-fn part1(input: String) -> usize {
+fn calc_monkey_business(input: String, relief_modifier: u128, rounds: usize) -> usize {
     let mut monkeys: Vec<Monkey> = input
         .trim()
         .split("\n\n")
         .enumerate()
-        .map(|(index, monkey_string)| Monkey::from(index, monkey_string))
+        .map(|(index, monkey_string)| Monkey::from(index, monkey_string, relief_modifier))
         .collect();
     let len = monkeys.len();
 
-    for round in 1..=20 {
+    let common_modulo = if rounds > 20 {
+        monkeys
+            .iter()
+            .fold(1, |common, monkey| common * monkey.test_divisor)
+    } else {
+        0
+    };
+
+    for _ in 1..=rounds {
         for index in 0..len {
             let current_monkey = &mut monkeys[index];
-            let mut throw_buff: VecDeque<(i32, usize)> = VecDeque::new();
+            let mut throw_buff: VecDeque<(u128, usize)> = VecDeque::new();
 
             while current_monkey.has_items() {
-                throw_buff.push_back(current_monkey.inspect_first_item());
+                throw_buff.push_back(current_monkey.inspect_first_item(common_modulo));
             }
 
             throw_buff.iter().for_each(|throw| {
@@ -174,8 +193,12 @@ fn part1(input: String) -> usize {
     monkey_business
 }
 
+fn part1(input: String) -> usize {
+    calc_monkey_business(input, 3, 20)
+}
+
 fn part2(input: String) -> usize {
-    0
+    calc_monkey_business(input, 1, 10000)
 }
 
 fn main() {
@@ -193,5 +216,5 @@ fn test_part1() {
 #[test]
 fn test_part2() {
     let input = fs::read_to_string("./test-input.txt").expect("Error!");
-    assert_eq!(part2(input), 0);
+    assert_eq!(part2(input), 2713310158);
 }
