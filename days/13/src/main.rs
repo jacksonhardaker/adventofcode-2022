@@ -22,15 +22,42 @@ fn part1(input: Split<&str>) -> usize {
     results
 }
 
-fn part2(input: Split<&str>) -> usize {
-    0
+fn part2(input: &str) -> usize {
+    let divider_packets = ("[[2]]", "[[6]]");
+    let mut new_input = String::new();
+    new_input.push_str(&input.replace("\n\n", "\n"));
+    new_input.push_str("\n");
+    new_input.push_str(divider_packets.0);
+    new_input.push_str("\n");
+    new_input.push_str(divider_packets.1);
+
+    let mut vec: Vec<&str> = new_input.split("\n").collect();
+
+    vec.sort_by(|a, b| {
+        let left = string_to_list(a);
+        let right = string_to_list(b);
+        let result = compare_lists(left, right);
+
+        if result == 1 {
+            std::cmp::Ordering::Less
+        } else if result == -1 {
+            std::cmp::Ordering::Greater
+        } else {
+            std::cmp::Ordering::Equal
+        }
+    });
+
+    let first = vec.iter().position(|packet| packet.eq(&divider_packets.0)).unwrap() + 1;
+    let second = vec.iter().position(|packet| packet.eq(&divider_packets.1)).unwrap() + 1;
+
+    first * second
 }
 
 fn main() {
     let input = fs::read_to_string("./days/13/input.txt").expect("Error!");
 
     println!("Part 1: {}", part1(input.trim().split("\n\n")));
-    println!("Part 2: {}", part2(input.trim().split("\n\n")));
+    println!("Part 2: {}", part2(input.trim()));
 }
 
 #[derive(Debug, Clone)]
@@ -42,8 +69,6 @@ enum ListItem {
 type List = Vec<ListItem>;
 
 fn compare_lists(left: ListItem, right: ListItem) -> i32 {
-    println!("comparing {:#?} and {:#?}", left, right);
-
     // If both values are integers, the lower integer should come first.
     if matches!(left.clone(), ListItem::N(_)) && matches!(right.clone(), ListItem::N(_)) {
         if let ListItem::N(left_int) = left.clone() {
@@ -151,6 +176,5 @@ fn test_part1() {
 #[test]
 fn test_part2() {
     let raw_input = fs::read_to_string("./test-input.txt").expect("Error!");
-    let input = raw_input.trim().split("\n");
-    assert_eq!(part2(input), 0);
+    assert_eq!(part2(raw_input.trim()), 140);
 }
