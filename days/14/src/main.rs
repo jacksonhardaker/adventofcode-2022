@@ -2,7 +2,7 @@ use std::{collections::HashSet, fs, str::Split};
 
 const START: (i32, i32) = (500, 0);
 
-fn part1(input: Split<&str>) -> usize {
+fn simulate_sand(input: Split<&str>, infinite_depth: bool) -> usize {
     let mut occupied: HashSet<(i32, i32)> = HashSet::new();
     let mut max_depth: i32 = 0;
     input.for_each(|line| {
@@ -39,16 +39,29 @@ fn part1(input: Split<&str>) -> usize {
             prev = current;
         }
     });
+    max_depth = if infinite_depth {
+        max_depth
+    } else {
+        max_depth + 2
+    };
 
     let mut sand_at_rest = 0;
     let mut sand = START.clone();
     loop {
-        if !occupied.contains(&(sand.0, sand.1 + 1)) {
+        let is_occupied = |coords: &(i32, i32)| {
+            if infinite_depth {
+                return occupied.contains(coords);
+            } else {
+                return occupied.contains(coords) || coords.1 >= max_depth;
+            }
+        };
+
+        if !is_occupied(&(sand.0, sand.1 + 1)) {
             sand.1 += 1;
-        } else if !occupied.contains(&(sand.0 - 1, sand.1 + 1)) {
+        } else if !is_occupied(&(sand.0 - 1, sand.1 + 1)) {
             sand.1 += 1;
             sand.0 -= 1;
-        } else if !occupied.contains(&(sand.0 + 1, sand.1 + 1)) {
+        } else if !is_occupied(&(sand.0 + 1, sand.1 + 1)) {
             sand.1 += 1;
             sand.0 += 1;
         } else {
@@ -56,11 +69,15 @@ fn part1(input: Split<&str>) -> usize {
             sand_at_rest += 1;
         }
 
+        if sand == START {
+            break;
+        }
+
         if occupied.contains(&sand) {
             sand = START.clone();
         }
 
-        if sand.1 > max_depth {
+        if infinite_depth && sand.1 > max_depth {
             break;
         }
     }
@@ -68,8 +85,12 @@ fn part1(input: Split<&str>) -> usize {
     sand_at_rest
 }
 
+fn part1(input: Split<&str>) -> usize {
+    simulate_sand(input, true)
+}
+
 fn part2(input: Split<&str>) -> usize {
-    0
+    simulate_sand(input, false)
 }
 
 fn main() {
@@ -89,5 +110,5 @@ fn test_part1() {
 fn test_part2() {
     let raw_input = fs::read_to_string("./test-input.txt").expect("Error!");
     let input = raw_input.trim().split("\n");
-    assert_eq!(part2(input), 0);
+    assert_eq!(part2(input), 93);
 }
