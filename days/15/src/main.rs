@@ -36,40 +36,55 @@ fn generate_scan(input: Split<&str>) -> Scan {
 }
 
 fn find_impossibles(scan: Scan, row: i32) -> usize {
-    let mut distances: HashMap<Coords, i32> = HashMap::new();
-    let mut beacons: HashSet<Coords> = HashSet::new();
-    let mut min_x: i32 = 0;
-    let mut max_x: i32 = 0;
-    scan.keys().for_each(|sensor| {
-        let beacon = scan.get(sensor).unwrap();
-        let distance = get_manhattan_distance(sensor, beacon);
-        distances.insert(*sensor, distance);
-        beacons.insert(*beacon);
+    let mut occupied: HashSet<Coords> = HashSet::new();
 
-        if sensor.0 - distance < min_x {
-            min_x = sensor.0 - distance;
-        }
-        if sensor.0 + distance > max_x {
-            max_x = sensor.0 + distance;
-        }
+    let mut beacons: HashSet<Coords> = HashSet::new();
+    scan.keys().for_each(|key| {
+        beacons.insert(*scan.get(key).unwrap());
     });
 
-    let mut impossibles: HashSet<Coords> = HashSet::new();
+    scan.keys().for_each(|sensor| {
+        let beacon = scan.get(sensor).unwrap();
+        let mut distance: i32 = get_manhattan_distance(sensor, beacon);
 
-    for x in min_x..=max_x {
-        let current = (x, row);
-        scan.keys().for_each(|sensor| {
-            let distance = get_manhattan_distance(sensor, &current);
+        let diff = sensor.1 - row;
+        let y_delta = if diff > 0 { -1 } else { 1 };
 
-            if distance <= *distances.get(sensor).unwrap() && !beacons.contains(&current) {
-                // Is
-                impossibles.insert(current);
+        // println!("{},{} - distance: {}, diff: {}, y_delta: {}", sensor.0, sensor.1, distance, diff, y_delta);
+
+        let mut y = sensor.1;
+        loop {
+            // println!("y {}", y);
+            if y == row {
+                // println!("inserting: ({},{})", sensor.0, y);
+                if !beacons.contains(&(sensor.0, y)) {
+                    occupied.insert((sensor.0, y));
+                }
+
+                let mut x_delta = 1;
+                while distance > 0 {
+                    // println!("inserting: ({},{})", sensor.0 + x_delta, y);
+                    if !beacons.contains(&(sensor.0 + x_delta, y)) {
+                        occupied.insert((sensor.0 + x_delta, y));
+                    }
+                    // println!("inserting: ({},{})", sensor.0 - x_delta, y);
+                    if !beacons.contains(&(sensor.0 - x_delta, y)) {
+                        occupied.insert((sensor.0 - x_delta, y));
+                    }
+                    x_delta += 1;
+                    distance -= 1;
+                }
+            } else {
+                y += y_delta;
+                distance -= 1;
             }
-        });
-    }
 
-    // println!("{:#?}", impossibles);
-    impossibles.len()
+            if distance <= 0 {
+              break;
+            }
+        }
+    });
+    occupied.len()
 }
 
 fn part1(input: Split<&str>, row: i32) -> usize {
