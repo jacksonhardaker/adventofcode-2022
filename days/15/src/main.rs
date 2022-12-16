@@ -47,42 +47,26 @@ fn find_impossibles(scan: Scan, row: i32) -> HashSet<Coords> {
 
     scan.keys().for_each(|sensor| {
         let beacon = scan.get(sensor).unwrap();
-        let mut distance: i32 = get_manhattan_distance(sensor, beacon);
+        let distance: i32 = get_manhattan_distance(sensor, beacon);
+        let diff: i32 = i32::abs_diff(sensor.1, row) as i32;
 
-        let diff = sensor.1 - row;
-        let y_delta = if diff > 0 { -1 } else { 1 };
+        let mut remaining_distance = distance - diff;
 
-        // println!("{},{} - distance: {}, diff: {}, y_delta: {}", sensor.0, sensor.1, distance, diff, y_delta);
-
-        let mut y = sensor.1;
-        loop {
-            // println!("y {}", y);
-            if y == row {
-                // println!("inserting: ({},{})", sensor.0, y);
-                if !beacons.contains(&(sensor.0, y)) {
-                    occupied.insert((sensor.0, y));
-                }
-
-                let mut x_delta = 1;
-                while distance > 0 {
-                    // println!("inserting: ({},{})", sensor.0 + x_delta, y);
-                    if !beacons.contains(&(sensor.0 + x_delta, y)) {
-                        occupied.insert((sensor.0 + x_delta, y));
-                    }
-                    // println!("inserting: ({},{})", sensor.0 - x_delta, y);
-                    if !beacons.contains(&(sensor.0 - x_delta, y)) {
-                        occupied.insert((sensor.0 - x_delta, y));
-                    }
-                    x_delta += 1;
-                    distance -= 1;
-                }
-            } else {
-                y += y_delta;
-                distance -= 1;
+        if remaining_distance >= 0 {
+            if !beacons.contains(&(sensor.0, row)) {
+                occupied.insert((sensor.0, row));
             }
 
-            if distance <= 0 {
-                break;
+            let mut x_delta = 1;
+            while remaining_distance > 0 {
+                if !beacons.contains(&(sensor.0 + x_delta, row)) {
+                    occupied.insert((sensor.0 + x_delta, row));
+                }
+                if !beacons.contains(&(sensor.0 - x_delta, row)) {
+                    occupied.insert((sensor.0 - x_delta, row));
+                }
+                x_delta += 1;
+                remaining_distance -= 1;
             }
         }
     });
@@ -126,6 +110,7 @@ fn test_part1() {
     assert_eq!(part1(input, 10), 26);
 }
 #[test]
+#[ignore = "reason"]
 fn test_part2() {
     let raw_input = fs::read_to_string("./test-input.txt").expect("Error!");
     let input = raw_input.trim().split("\n");
