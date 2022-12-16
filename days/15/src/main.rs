@@ -5,6 +5,8 @@ use std::{
     str::Split,
 };
 
+const TUNING_MOD: i32 = 4000000;
+
 type Coords = (i32, i32);
 type Scan = HashMap<Coords, Coords>;
 
@@ -35,7 +37,7 @@ fn generate_scan(input: Split<&str>) -> Scan {
     scan
 }
 
-fn find_impossibles(scan: Scan, row: i32) -> usize {
+fn find_impossibles(scan: Scan, row: i32) -> HashSet<Coords> {
     let mut occupied: HashSet<Coords> = HashSet::new();
 
     let mut beacons: HashSet<Coords> = HashSet::new();
@@ -80,19 +82,33 @@ fn find_impossibles(scan: Scan, row: i32) -> usize {
             }
 
             if distance <= 0 {
-              break;
+                break;
             }
         }
     });
-    occupied.len()
+    occupied
 }
 
 fn part1(input: Split<&str>, row: i32) -> usize {
     let scan = generate_scan(input);
-    find_impossibles(scan, row)
+    find_impossibles(scan, row).len()
 }
 
-fn part2(input: Split<&str>) -> usize {
+fn part2(input: Split<&str>, min_max: (i32, i32)) -> usize {
+    let scan = generate_scan(input);
+    let mut beacons: HashSet<Coords> = HashSet::new();
+    scan.keys().for_each(|key| {
+        beacons.insert(*scan.get(key).unwrap());
+    });
+
+    for y in min_max.0..=min_max.1 {
+        let occupied = find_impossibles(scan.to_owned(), y);
+        for x in min_max.0..=min_max.1 {
+            if !(occupied.contains(&(x, y)) || beacons.contains(&(x, y))) {
+                return (x * TUNING_MOD + y).try_into().unwrap();
+            }
+        }
+    }
     0
 }
 
@@ -100,7 +116,7 @@ fn main() {
     let input = fs::read_to_string("./days/15/input.txt").expect("Error!");
 
     println!("Part 1: {}", part1(input.trim().split("\n"), 2000000));
-    println!("Part 2: {}", part2(input.trim().split("\n")));
+    println!("Part 2: {}", part2(input.trim().split("\n"), (0, 4000000)));
 }
 
 #[test]
@@ -113,5 +129,5 @@ fn test_part1() {
 fn test_part2() {
     let raw_input = fs::read_to_string("./test-input.txt").expect("Error!");
     let input = raw_input.trim().split("\n");
-    assert_eq!(part2(input), 0);
+    assert_eq!(part2(input, (0, 20)), 56000011);
 }
